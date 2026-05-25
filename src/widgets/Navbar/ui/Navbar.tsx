@@ -12,7 +12,7 @@ export const Navbar: FC = () => {
         <NavbarBrand className="gap-3 max-w-fit">
           <Link className="flex justify-start items-center gap-1 text-foreground" href="/">
             <PhoneIcon className="w-8 h-8 text-primary" />
-            <p className="font-bold text-inherit pl-3">PHONE SRVICE</p>
+            <p className="font-bold text-inherit px-4">PHONE SRVICE</p>
           </Link>
         </NavbarBrand>
         <MainMenu />
