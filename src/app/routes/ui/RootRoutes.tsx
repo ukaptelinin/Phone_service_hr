@@ -1,4 +1,5 @@
 import { CallPage } from '@/pages/CallPage';
+import { CallPhoneNumberPage } from '@/pages/CallPhoneNumberPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { OptionsPage } from '@/pages/OptionsPage';
 import type { FC } from 'react';
@@ -9,6 +10,7 @@ export const RootRoutes: FC = () => {
     <Routes>
        <Route path="/" element={<Navigate to="/call" replace />} />
       <Route path="/call" element={<CallPage />} />
+      <Route path="/call/phonenumber" element={<CallPhoneNumberPage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/options" element={<OptionsPage />} />
     </Routes>

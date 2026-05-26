@@ -10,9 +10,9 @@ export const MainMenu: FC = () => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/call', label: 'CALL' },
-    { path: '/history', label: 'HISTORY' },
-    { path: '/options', label: 'OPTIONS' },
+    { path: '/call', label: 'Прозвон' },
+    { path: '/history', label: 'Контакты' },
+    { path: '/options', label: 'Отчеты' },
   ];
 
   const handleClick = (path: string) => {
