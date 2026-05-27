@@ -3,7 +3,7 @@ import type { FC } from 'react';
  
  export const ScriptSwitch: FC = () => {
    return <div className="flex flex-col gap-2">
-        <ButtonGroup variant="tertiary">
+        <ButtonGroup size="sm" variant="tertiary" >
           <Button>Скрипт</Button>
           <Button>
             <ButtonGroup.Separator />
