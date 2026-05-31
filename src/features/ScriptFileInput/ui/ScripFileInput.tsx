@@ -3,6 +3,8 @@ import { Button, Form, Input } from '@heroui/react';
 //import { useMoviesListContext } from '@/entities/movies-list';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
+import { fetchAndParseGoogleDoc } from '@/shared/api';
+
 
 
 
@@ -10,16 +12,19 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 export const ScriptFileInput: FC = () => {
  // const { currentTitle, getFreshMovies } = useMoviesListContext();
   const navigate = useNavigate();
-  const onSearcheMovie = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onGetUrl = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    //const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget);
+    const fileUrl = formData.get('search') as string;
+    const scripText = fetchAndParseGoogleDoc(fileUrl);
     //const title = formData.get('search') as string;
 //    await getFreshMovies(title);
+console.log(scripText);
     navigate(`/call/phonenumber`);
   };
 
   return (
-    <Form className="flex items-center gap-2 grow" onSubmit={onSearcheMovie}>
+    <Form className="flex items-center gap-2 grow" onSubmit={onGetUrl}>
       <div className="relative flex items-center grow">
       <Input
         className="grow"
