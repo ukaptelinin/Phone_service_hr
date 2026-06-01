@@ -1,1 +1,1 @@
- export {PhoneNumberPageNavbar } from "./ui/PhoneNumberPageNavbar";
+export { PhoneNumberPageNavbar } from './ui/PhoneNumberPageNavbar';

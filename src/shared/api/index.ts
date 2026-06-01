@@ -1,1 +1,0 @@
-export { fetchAndParseGoogleDoc } from './fetchAndParseGoogleDoc';

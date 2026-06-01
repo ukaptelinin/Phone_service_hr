@@ -8,7 +8,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 export const RootRoutes: FC = () => {
   return (
     <Routes>
-       <Route path="/" element={<Navigate to="/call" replace />} />
+      <Route path="/" element={<Navigate to="/call" replace />} />
       <Route path="/call" element={<CallPage />} />
       <Route path="/call/phonenumber" element={<CallPhoneNumberPage />} />
       <Route path="/history" element={<HistoryPage />} />

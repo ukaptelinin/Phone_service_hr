@@ -1,93 +1,42 @@
-import { fetchMovies } from '@/shared/api';
-import { MoviesResponse } from '@/shared/api/types';
-import { createContext, FC, ReactNode, useRef, useState, useTransition } from 'react';
-export interface IMoviesResponseContext {
-  moviesList: MoviesResponse[];
-  currentTitle: string;
-  error: string | null;
-  isUrlChange: boolean;
-  isPending: boolean;
-  getFreshMovies: (movieTitle: string) => Promise<void>;
-  loadMoreMovies: () => Promise<void>;
-  toggleIsUrlChange: () => void;
+// context/DocxContext.tsx
+import React, { createContext, useState, type ReactNode } from 'react';
+
+import type { ScriptBlocks } from '@/entities/script/types/types';
+import { parseHtmlToBlocks } from '../lib';
+
+interface DocxContextValue {
+  htmlContent: string;
+  fileName: string;
+  scriptBlocks: ScriptBlocks;
+  setDocxData: (html: string, name: string) => void;
+  clearDocxData: () => void;
 }
 
-export const MoviesListContext = createContext<IMoviesResponseContext>({
-  moviesList: [],
-  currentTitle: '',
-  error: null,
-  isUrlChange: false,
-  isPending: false,
-  getFreshMovies: () => Promise.resolve(),
-  loadMoreMovies: () => Promise.resolve(),
-  toggleIsUrlChange: () => {},
-});
+export const DocxContext = createContext<DocxContextValue | undefined>(undefined);
 
-export const MoviesContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const pageNumberRef = useRef(1);
-  const totalPagesRef = useRef(1);
-  const [currentTitle, setCurrentTitle] = useState('');
-  const [moviesList, setMoviesList] = useState<MoviesResponse[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isUrlChange,setIsUrlChange] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
- 
+export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [htmlContent, setHtmlContent] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [scriptBlocks, setScriptBlocks] = useState<ScriptBlocks>({});
 
-  const getFreshMovies = async (movieTitle: string): Promise<void> => {
-    await startTransition(async () => {
-      try {
-        setError(null);
-        if (movieTitle === '') return;
-        setCurrentTitle(movieTitle);
-        pageNumberRef.current = 1;
-        setMoviesList([]);
-        const { docs, pages } = await fetchMovies(movieTitle, 1);
-        totalPagesRef.current = pages;
-        setMoviesList(docs);
-      } catch (error) {
-        setError(
-          error instanceof Error && error.message === 'Фильмы не найдены'
-            ? error.message
-            : 'Что-то пошло не так',
-        );
-      }
-    });
+  const setDocxData = (html: string, name: string) => {
+    setHtmlContent(html);
+    setFileName(name);
+    const blocks = parseHtmlToBlocks(html);
+    setScriptBlocks(blocks);
   };
 
-  const loadMoreMovies = async (): Promise<void> => {
-    await startTransition(async () => {
-      if (pageNumberRef.current === totalPagesRef.current) return;
-      try {
-        setError(null);
-        pageNumberRef.current = pageNumberRef.current + 1;
-        const { docs } = await fetchMovies(currentTitle, pageNumberRef.current);
-        setMoviesList((prevMovies) => [...prevMovies, ...docs]);
-      } catch (error) {
-        setError(
-          error instanceof Error && error.message === 'Фильмы не найдены'
-            ? error.message
-            : 'Что-то пошло не так',
-        );
-        pageNumberRef.current = pageNumberRef.current - 1;
-      }
-    });
+  const clearDocxData = () => {
+    setHtmlContent('');
+    setFileName('');
+    setScriptBlocks({});
   };
-  const toggleIsUrlChange = ():void => setIsUrlChange(!isUrlChange);
 
   return (
-    <MoviesListContext.Provider
-      value={{
-        moviesList,
-        currentTitle,
-        error,
-        isUrlChange,
-        isPending,
-        getFreshMovies,
-        loadMoreMovies,
-        toggleIsUrlChange,
-      }}
+    <DocxContext.Provider
+      value={{ htmlContent, fileName, scriptBlocks, setDocxData, clearDocxData }}
     >
       {children}
-    </MoviesListContext.Provider>
+    </DocxContext.Provider>
   );
 };

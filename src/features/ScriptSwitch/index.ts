@@ -1,1 +1,1 @@
- export {SwithScript} from './ui/ScriptSwitch';
+export { SwithScript } from './ui/ScriptSwitch';

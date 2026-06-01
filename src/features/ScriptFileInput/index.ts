@@ -1,1 +1,1 @@
-export { ScriptFileInput } from './ui/ScripFileInput';
+export { ScriptFileInput } from './ui/ScriptFileInput';
