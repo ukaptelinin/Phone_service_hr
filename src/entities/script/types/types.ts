@@ -1,4 +1,4 @@
-export type ScriptBlocks = Record<string, string>; // ключ -> HTML блока
+export type ScriptBlocks = Partial<Record<ScriptBlockKey, string>>; // ключ -> HTML блока
 
 export interface DocxData {
   htmlContent: string;

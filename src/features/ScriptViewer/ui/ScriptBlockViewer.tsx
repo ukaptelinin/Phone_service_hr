@@ -1,9 +1,10 @@
 // features/script-viewer/ui/ScriptBlockViewer.tsx
 import React from 'react';
 import { useDocx } from '@/entities/script/model/useDocx';
+import type { ScriptBlockKey } from '@/entities/script/types/types';
 
 interface ScriptBlockViewerProps {
-  blockKey: string;
+  blockKey: ScriptBlockKey;
   className?: string;
 }
 

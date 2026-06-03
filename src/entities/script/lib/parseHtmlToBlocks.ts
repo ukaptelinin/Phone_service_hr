@@ -1,66 +1,125 @@
-// utils/parseHtmlToBlocks.ts
+ import type { ScriptBlockKey, ScriptBlocks } from "../types/types";
 
-import type { ScriptBlocks } from '@/entities/script/types/types';
-
-/**
- * Разбивает HTML-строку на блоки по ключевым фразам.
- * Ключи идут в определённом порядке.
- * Возвращает объект, где ключ – это фраза-маркер, а значение – HTML-код до следующего маркера.
- */
 export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
-  const keys = [
-    'KPI:',
-    'Что клиент не принимает:',
-    'О компании:',
-    'Указать: Имя, тип станка, комментарий по потребности согласно доп. вопросов, из наличия/под заказ, город, сроки, время звонка\n\nКрасным выделены обязательные вопросы и предложения!\nСиним подсказки и дополнительные вопросы!',
+
+  // ── Утилиты ──────────────────────────────────────────────────────────
+  const stripTags = (s: string): string => s.replace(/<[^>]*>/g, '');
+
+  /**
+   * Вставляет пустую строку (\n\n) между закрывающим и открывающим
+   * блочными тегами, чтобы HTML был визуально читаемым.
+   */
+  const insertSpaceBetweenLines = (block: string): string =>
+    block
+      // Между закрывающим и открывающим блочными тегами → двойной перенос
+      .replace(
+        /(<\/(?:p|h[1-6]|li|ol|ul|table|tr|td|div|blockquote)>)\s*(<(?:p|h[1-6]|li|ol|ul|table|tr|td|div|blockquote)\b)/gi,
+        '$1\n\n$2',
+      )
+      // Внутри списков: между </li> и <li> → одинарный перенос
+      .replace(/(<\/li>)\s*(<li\b)/gi, '$1\n$2')
+      // После открывающего <ol>/<ul> перед первым <li>
+      .replace(/(<(?:ol|ul)[^>]*>)\s*(<li\b)/gi, '$1\n$2')
+      // Перед закрывающим </ol>/</ul>
+      .replace(/(<\/li>)\s*(<\/(?:ol|ul)>)/gi, '$1\n$2')
+      // Между строками таблицы
+      .replace(/(<\/tr>)\s*(<tr\b)/gi, '$1\n$2')
+      // После <table> перед первым <tr>
+      .replace(/(<table[^>]*>)\s*(<tr\b)/gi, '$1\n$2')
+      // Перед </table>
+      .replace(/(<\/tr>)\s*(<\/table>)/gi, '$1\n$2')
+      .trim();
+
+  /**
+   * Находит позицию начала ближайшего открывающего тега
+   * (<p, <h*, <li, <tr, <td …) перед указанным смещением.
+   */
+  const findOpeningTagBefore = (offset: number): number => {
+    const before = html.substring(0, offset);
+    const match = before.match(/.*(<(?:p|h\d|li|tr|td|table|ol|ul)\b)/s);
+    return match ? before.lastIndexOf(match[1]) : offset;
+  };
+
+  /**
+   * Находит конец закрывающего тега текущего блочного элемента,
+   * содержащего маркер (</p>, </h*>, </td>, </tr>, …).
+   */
+  const findClosingTagAfter = (offset: number): number => {
+    const after = html.substring(offset);
+    const match = after.match(/<\/(?:p|h\d|li|tr|td|table|ol|ul)>/);
+    return match ? offset + (match.index ?? 0) + match[0].length : offset;
+  };
+
+  // ── Маркеры секций в порядке появления в документе ───────────────────
+  const markers: { key: ScriptBlockKey; search: string }[] = [
+    {
+      key: 'KPI:',
+      search: 'KPI:',
+    },
+    {
+      key: 'Что клиент не принимает:',
+      search: 'Что клиент не принимает:',
+    },
+    {
+      key: 'О компании:',
+      search: 'О компании:',
+    },
+    {
+      key: 'Указать: Имя, тип станка, комментарий по потребности согласно доп. вопросов, из наличия/под заказ, город, сроки, время звонка\\n\\nКрасным выделены обязательные вопросы и предложения!\\nСиним подсказки и дополнительные вопросы!',
+      search: 'Указать: Имя, тип станка',
+    },
   ];
 
-  // Извлекаем "чистый" текст без HTML-тегов для поиска позиций
-  const plainText = html.replace(/<[^>]*>/g, '');
+  // ── Определяем позиции каждого маркера в HTML ────────────────────────
+  const positions: { key: ScriptBlockKey; start: number; headerEnd: number }[] = [];
 
-  // Находим индексы каждого ключа в plainText
-  const positions: { key: string; start: number }[] = [];
-  for (const key of keys) {
-    const index = plainText.indexOf(key);
-    if (index !== -1) {
-      positions.push({ key, start: index });
-    } else {
-      console.warn(`Ключ не найден в документе: "${key}"`);
-    }
+  for (const marker of markers) {
+    const textIdx = html.indexOf(marker.search);
+    if (textIdx === -1) continue;
+
+    const tagStart = findOpeningTagBefore(textIdx);
+    const tagEnd = findClosingTagAfter(textIdx);
+
+    positions.push({ key: marker.key, start: tagStart, headerEnd: tagEnd });
   }
 
-  // Сортируем по позиции
+  // Сортируем на случай, если порядок маркеров в HTML отличается
   positions.sort((a, b) => a.start - b.start);
 
-  // Теперь нужно найти соответствующие позиции в исходном HTML.
-  // Для этого используем подход: ищем в html подстроку, соответствующую ключу,
-  // но ближайшую к найденной позиции в plainText.
-  // Проще: ищем каждый ключ в html напрямую (с учётом возможных тегов внутри).
-  // Однако key может быть разбит тегами, поэтому сделаем более надёжный поиск по тексту.
+  // ── Вырезаем HTML-блоки между маркерами ──────────────────────────────
+  const blocks = {} as Record<ScriptBlockKey, string>;
 
-  // Вместо сложного маппинга упростим: будем искать каждый ключ в исходном html
-  // и брать первое вхождение после предыдущего.
-  const htmlPositions: { key: string; start: number }[] = [];
-  let lastIndex = 0;
-  for (const key of keys) {
-    const startIdx = html.indexOf(key, lastIndex);
-    if (startIdx !== -1) {
-      htmlPositions.push({ key, start: startIdx });
-      lastIndex = startIdx + 1;
-    } else {
-      // Если не нашли, пробуем искать более мягко: убираем из ключа знаки препинания?
-      console.warn(`Ключ не найден в HTML: "${key}"`);
+  for (let i = 0; i < positions.length; i++) {
+    const contentStart = positions[i].headerEnd;
+    const contentEnd =
+      i + 1 < positions.length ? positions[i + 1].start : html.length;
+
+    let blockHtml = html.substring(contentStart, contentEnd).trim();
+
+    // ── Спец-обработка последней секции (таблица скрипта) ─────────────
+    if (positions[i].key === markers[3].key) {
+      blockHtml = processScriptTable(blockHtml);
     }
-  }
 
-  const blocks: ScriptBlocks = {};
-  for (let i = 0; i < htmlPositions.length; i++) {
-    const currentKey = htmlPositions[i].key;
-    const start = htmlPositions[i].start;
-    const end = i + 1 < htmlPositions.length ? htmlPositions[i + 1].start : html.length;
-    let block = html.substring(start, end).trim();
-    blocks[currentKey] = block;
+    // ── Вставляем пробелы между строками ─────────────────────────────
+    blocks[positions[i].key] = insertSpaceBetweenLines(blockHtml);
   }
 
   return blocks;
+
+  // ── Обработка таблицы скрипта ────────────────────────────────────────
+  function processScriptTable(blockHtml: string): string {
+    return blockHtml.replace(
+      /<table[\s\S]*?<\/table>/gi,
+      (table) =>
+        table.replace(
+          /(<tr[^>]*>)\s*(<td[^>]*>)([\s\S]*?)(<\/td>)/gi,
+          (_match, trOpen: string, tdOpen: string, tdContent: string, tdClose: string) => {
+            const text = stripTags(tdContent).trim();
+            if (!text) return `${trOpen}${tdOpen}${tdContent}${tdClose}`;
+            return `${trOpen}${tdOpen}<h4>${text}</h4>${tdClose}`;
+          },
+        ),
+    );
+  }
 };
