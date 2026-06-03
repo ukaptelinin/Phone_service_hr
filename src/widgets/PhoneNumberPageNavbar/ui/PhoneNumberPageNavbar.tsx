@@ -1,7 +1,11 @@
-import type { FC } from 'react';
+import { type FC } from 'react';
 import { Navbar as HeroUINavbar, NavbarContent, NavbarItem } from '@heroui/navbar';
-import { Link } from '@heroui/react';
+import { Button, Link } from '@heroui/react';
+import { useDocx } from '@/entities/script/model/useDocx';
+
 export const PhoneNumberPageNavbar: FC = () => {
+  const { scriptMode, toggleScriptMode } = useDocx();
+
   return (
     <HeroUINavbar maxWidth="xl" position="sticky" className="flex flex-row">
       <NavbarContent className="flex justify-start gap-6">
@@ -15,6 +19,11 @@ export const PhoneNumberPageNavbar: FC = () => {
           <Link className="px-4">Задачи</Link>
         </NavbarItem>
       </NavbarContent>
+      <NavbarItem className="ml-auto">
+        <Button size="sm" onClick={toggleScriptMode}>
+          {scriptMode ? 'Новый' : 'Старый'}
+        </Button>
+      </NavbarItem>
     </HeroUINavbar>
   );
 };

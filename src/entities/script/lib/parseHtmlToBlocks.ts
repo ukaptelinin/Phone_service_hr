@@ -1,7 +1,6 @@
- import type { ScriptBlockKey, ScriptBlocks } from "../types/types";
+import type { ScriptBlockKey, ScriptBlocks } from '../types/types';
 
 export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
-
   // ── Утилиты ──────────────────────────────────────────────────────────
   const stripTags = (s: string): string => s.replace(/<[^>]*>/g, '');
 
@@ -91,8 +90,7 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
   for (let i = 0; i < positions.length; i++) {
     const contentStart = positions[i].headerEnd;
-    const contentEnd =
-      i + 1 < positions.length ? positions[i + 1].start : html.length;
+    const contentEnd = i + 1 < positions.length ? positions[i + 1].start : html.length;
 
     let blockHtml = html.substring(contentStart, contentEnd).trim();
 
@@ -109,17 +107,15 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
   // ── Обработка таблицы скрипта ────────────────────────────────────────
   function processScriptTable(blockHtml: string): string {
-    return blockHtml.replace(
-      /<table[\s\S]*?<\/table>/gi,
-      (table) =>
-        table.replace(
-          /(<tr[^>]*>)\s*(<td[^>]*>)([\s\S]*?)(<\/td>)/gi,
-          (_match, trOpen: string, tdOpen: string, tdContent: string, tdClose: string) => {
-            const text = stripTags(tdContent).trim();
-            if (!text) return `${trOpen}${tdOpen}${tdContent}${tdClose}`;
-            return `${trOpen}${tdOpen}<h4>${text}</h4>${tdClose}`;
-          },
-        ),
+    return blockHtml.replace(/<table[\s\S]*?<\/table>/gi, (table) =>
+      table.replace(
+        /(<tr[^>]*>)\s*(<td[^>]*>)([\s\S]*?)(<\/td>)/gi,
+        (_match, trOpen: string, tdOpen: string, tdContent: string, tdClose: string) => {
+          const text = stripTags(tdContent).trim();
+          if (!text) return `${trOpen}${tdOpen}${tdContent}${tdClose}`;
+          return `${trOpen}${tdOpen}<h4>${text}</h4>${tdClose}`;
+        },
+      ),
     );
   }
 };

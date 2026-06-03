@@ -1,4 +1,5 @@
 import { useDocx } from '@/entities/script/model/useDocx';
+import { HtmlContentViewer } from '@/features/HtmlContentViewer/ui';
 import { ScriptSwitch } from '@/features/ScriptSwitch/ui/ScriptSwitch';
 import { ScriptBlockViewer } from '@/features/ScriptViewer';
 import { PhoneNumberPageNavbar } from '@/widgets/PhoneNumberPageNavbar';
@@ -6,7 +7,7 @@ import { Button } from '@heroui/react';
 import type { FC } from 'react';
 
 export const CallPhoneNumberPage: FC = () => {
-  const { htmlContent, scriptBlocks, scriptBlockKey } = useDocx();
+  const { htmlContent, scriptBlocks, scriptBlockKey, scriptMode } = useDocx();
   console.log(htmlContent);
   console.log(scriptBlocks);
   return (
@@ -29,10 +30,16 @@ export const CallPhoneNumberPage: FC = () => {
         {/* Верхний блок: растягивается на всё доступное место, оранжевый фон */}
         <div className="flex flex-col grow">
           <PhoneNumberPageNavbar />
-          <ScriptBlockViewer blockKey={scriptBlockKey} />
-          <div className="mt-auto">
-            <ScriptSwitch />
-          </div>
+          {scriptMode ? (
+            <HtmlContentViewer htmlContent={htmlContent} />
+          ) : (
+            <ScriptBlockViewer blockKey={scriptBlockKey} />
+          )}
+          {scriptMode ? null : (
+            <div className="mt-auto">
+              <ScriptSwitch />
+            </div>
+          )}
         </div>
         {/* Нижний блок: 15% высоты родителя (правого блока), зелёный фон */}
         <div className="h-[25%] bg-emerald-500" />

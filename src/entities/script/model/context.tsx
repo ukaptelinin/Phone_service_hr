@@ -9,15 +9,19 @@ interface DocxContextValue {
   fileName: string;
   scriptBlocks: ScriptBlocks;
   scriptBlockKey: ScriptBlockKey;
+  scriptMode: boolean;
   setDocxData: (html: string, name: string) => void;
   clearDocxData: () => void;
   selectScriptBlockKey: (blockKey: ScriptBlockKey) => void;
+  setDocxContent: (html: string) => void;
+  toggleScriptMode: () => void;
 }
 
 export const DocxContext = createContext<DocxContextValue | undefined>(undefined);
 
 export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [htmlContent, setHtmlContent] = useState('');
+  const [scriptMode, setScriptMode] = useState(false);
   const [fileName, setFileName] = useState('');
   const [scriptBlocks, setScriptBlocks] = useState<ScriptBlocks>({});
   const [scriptBlockKey, setScriptBlockKey] = useState<ScriptBlockKey>(
@@ -30,6 +34,10 @@ export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const blocks = parseHtmlToBlocks(html);
     setScriptBlocks(blocks);
   };
+
+  const setDocxContent = (html: string) => setHtmlContent(html);
+
+  const toggleScriptMode = () => setScriptMode(!scriptMode);
 
   const clearDocxData = () => {
     setHtmlContent('');
@@ -46,9 +54,12 @@ export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         fileName,
         scriptBlocks,
         scriptBlockKey,
+        scriptMode,
         setDocxData,
         clearDocxData,
         selectScriptBlockKey,
+        setDocxContent,
+        toggleScriptMode,
       }}
     >
       {children}
