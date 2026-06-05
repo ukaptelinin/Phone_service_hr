@@ -5,7 +5,7 @@ import mammoth from 'mammoth';
 import { useDocx } from '@/entities/script/model/useDocx';
 
 export const ScriptFileInput: FC = () => {
-  const { setDocxData } = useDocx();
+  const { setDocxData, setFileContent } = useDocx();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +24,7 @@ export const ScriptFileInput: FC = () => {
     reader.onload = async (e) => {
       const arrayBuffer = e.target?.result as ArrayBuffer;
       try {
+        setFileContent(arrayBuffer);
         // Конвертируем .docx в HTML
         const result = await mammoth.convertToHtml({ arrayBuffer });
         setDocxData(result.value, file.name);
