@@ -1,5 +1,6 @@
 import { useDocx } from '@/entities/script/model/useDocx';
 import { DocxViewer } from '@/features/DoxViewer';
+import { InputStatusBlock } from '@/features/InputStatusBlock';
 import { ScriptSwitch } from '@/features/ScriptSwitch/ui/ScriptSwitch';
 import { ScriptBlockViewer } from '@/features/ScriptViewer';
 import { PhoneNumberPageNavbar } from '@/widgets/PhoneNumberPageNavbar';
@@ -42,8 +43,9 @@ export const CallPhoneNumberPage: FC = () => {
             </div>
           )}
         </div>
-        {/* Нижний блок: 15% высоты родителя (правого блока), зелёный фон */}
-        <div className="h-[25%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1" />
+        <div className="flex flex-col h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 overflow-hidden">
+          <InputStatusBlock />
+        </div>
       </div>
     </div>
   );
