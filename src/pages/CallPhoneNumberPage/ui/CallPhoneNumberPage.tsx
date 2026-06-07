@@ -30,7 +30,7 @@ export const CallPhoneNumberPage: FC = () => {
       {/* Правый блок: занимает оставшиеся 75% ширины, вертикальный flex */}
       <div className="flex flex-col w-3/4 h-full ">
         {/* Верхний блок: растягивается на всё доступное место, оранжевый фон */}
-        <div className="flex flex-col grow rounded-lg shadow-md ring-1 ring-gray-200/50 m-1">
+        <div className="flex flex-col grow rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 min-h-0">
           <PhoneNumberPageNavbar />
           {scriptMode ? (
             <DocxViewer fileData={fileData} />
@@ -43,7 +43,7 @@ export const CallPhoneNumberPage: FC = () => {
             </div>
           )}
         </div>
-        <div className="flex flex-col h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 overflow-hidden">
+        <div className="flex flex-col min-h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 overflow-hidden">
           <InputStatusBlock />
         </div>
       </div>

@@ -121,10 +121,9 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({
         className={styles.container}
         style={{
           width: '100%',
-          maxHeight: '70vh',
-          overflowX: 'auto',
+          maxHeight: '60vh',
           overflowY: 'auto',
-          minHeight: 0,
+          padding: '1rem',
         }}
       />
     </div>
