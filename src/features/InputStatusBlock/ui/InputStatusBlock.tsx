@@ -5,7 +5,6 @@ export const InputStatusBlock: FC = () => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log(formData);
   };
   return (
     <Form className="flex flex-col w-full h-full" onSubmit={onSubmit}>
@@ -21,8 +20,8 @@ export const InputStatusBlock: FC = () => {
             <TextArea placeholder="Введите комментарий" className="w-full h-full resize-none" />
           </TextField>
         </div>
-        <Button type="submit" className="self-center">
-          Готово
+        <Button type="submit" className="self-center bg-green-500">
+          Отправить
         </Button>
       </div>
     </Form>

@@ -28,7 +28,7 @@ export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [fileName, setFileName] = useState('');
   const [scriptBlocks, setScriptBlocks] = useState<ScriptBlocks>({});
   const [scriptBlockKey, setScriptBlockKey] = useState<ScriptBlockKey>(
-    'Указать: Имя, тип станка, комментарий по потребности согласно доп. вопросов, из наличия/под заказ, город, сроки, время звонка\\n\\nКрасным выделены обязательные вопросы и предложения!\\nСиним подсказки и дополнительные вопросы!',
+    'Красным выделены обязательные вопросы и предложения!',
   );
 
   const setDocxData = (html: string, name: string) => {

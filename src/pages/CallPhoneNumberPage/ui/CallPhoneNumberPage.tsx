@@ -8,9 +8,7 @@ import { Button } from '@heroui/react';
 import type { FC } from 'react';
 
 export const CallPhoneNumberPage: FC = () => {
-  const { htmlContent, fileData, scriptBlocks, scriptBlockKey, scriptMode } = useDocx();
-  console.log(htmlContent);
-  console.log(scriptBlocks);
+  const { fileData, scriptBlockKey, scriptMode } = useDocx();
   return (
     <div className="flex w-full h-full">
       {/* Левый блок: 25% ширины, синий фон */}
@@ -19,7 +17,7 @@ export const CallPhoneNumberPage: FC = () => {
         <div className="h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1">
           <div className="flex flex-col items-center max-w-xl gap-4">
             <h1>+79291235467</h1>
-            <Button className="bg-green-500 px-6 py-2 rounded-lg w-32">Вызов</Button>
+            <Button className="bg-green-500">Позвонить</Button>
           </div>
         </div>
         {/* Нижний блок: оставшееся пространство (70%) */}

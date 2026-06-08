@@ -1,10 +1,10 @@
 import { useRef, type FC } from 'react';
 import { Button } from '@heroui/react';
 import { useNavigate } from 'react-router-dom';
-import mammoth from 'mammoth';
+import { renderAsync } from 'docx-preview';
 import { useDocx } from '@/entities/script/model/useDocx';
 
-export const ScriptFileInput: FC = () => {
+export const InputScriptFile: FC = () => {
   const { setDocxData, setFileContent } = useDocx();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -13,7 +13,6 @@ export const ScriptFileInput: FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Проверка расширения
     if (!file.name.endsWith('.docx')) {
       alert('Пожалуйста, выберите файл в формате .docx');
       return;
@@ -25,9 +24,22 @@ export const ScriptFileInput: FC = () => {
       const arrayBuffer = e.target?.result as ArrayBuffer;
       try {
         setFileContent(arrayBuffer);
-        // Конвертируем .docx в HTML
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        setDocxData(result.value, file.name);
+
+        // Рендерим DOCX во временный контейнер, чтобы получить HTML
+        const tempContainer = document.createElement('div');
+        await renderAsync(arrayBuffer, tempContainer, undefined, {
+          className: 'docx-content', // префикс CSS-классов
+          inWrapper: false, // без обёртки-страницы
+          ignoreWidth: true,
+          ignoreHeight: true,
+          renderHeaders: false,
+          renderFooters: false,
+          renderFootnotes: false,
+          renderEndnotes: false,
+        });
+
+        const htmlString = tempContainer.innerHTML;
+        setDocxData(htmlString, file.name);
         navigate('/call/phonenumber');
       } catch (error) {
         console.error('Ошибка парсинга файла:', error);

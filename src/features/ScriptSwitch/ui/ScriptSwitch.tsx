@@ -8,11 +8,10 @@ import clsx from 'clsx';
 type SectionKey = 'KPI' | 'О компании' | 'Не принимает' | 'Скрипт';
 
 const data: Record<SectionKey, string> = {
-  KPI: 'KPI:',
+  KPI: 'KPI',
   'О компании': 'О компании:',
   'Не принимает': 'Что клиент не принимает:',
-  Скрипт:
-    'Указать: Имя, тип станка, комментарий по потребности согласно доп. вопросов, из наличия/под заказ, город, сроки, время звонка\n\nКрасным выделены обязательные вопросы и предложения!\nСиним подсказки и дополнительные вопросы!',
+  Скрипт: 'Красным выделены обязательные вопросы и предложения!',
 };
 
 export const ScriptSwitch: FC = () => {
@@ -20,6 +19,7 @@ export const ScriptSwitch: FC = () => {
 
   const handleClick = (key: SectionKey) => {
     const fullKey = data[key] as ScriptBlockKey;
+
     selectScriptBlockKey(fullKey);
   };
 

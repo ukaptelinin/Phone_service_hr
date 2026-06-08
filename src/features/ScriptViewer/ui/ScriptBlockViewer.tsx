@@ -27,7 +27,10 @@ export const ScriptBlockViewer: React.FC<ScriptBlockViewerProps> = ({
 
   return (
     <div className={`w-full max-h-[63vh] overflow-y-auto p-4 ${className}`}>
-      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      <div
+        className="max-w-none **:leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
     </div>
   );
 };
