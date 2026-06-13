@@ -10,25 +10,25 @@ import type { FC } from 'react';
 export const CallPhoneNumberPage: FC = () => {
   const { fileData, scriptBlockKey, scriptMode } = useDocx();
   return (
-    <div className="flex w-full h-full">
-      {/* Левый блок: 25% ширины, синий фон */}
-      <div className="flex flex-col w-1/4 h-full">
+    <div className="flex w-full h-full overflow-hidden gap-1 p-1">
+      {/* Левый блок: 25% ширины */}
+      <div className="flex flex-col w-1/4 min-h-0 gap-1">
         {/* Верхний блок: 30% высоты левой колонки */}
-        <div className="h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1">
+        <div className="flex-[30] shrink-0 rounded-lg shadow-md ring-1 ring-gray-200/50">
           <div className="flex flex-col items-center max-w-xl gap-4">
             <h1>+79291235467</h1>
             <Button className="bg-green-500">Позвонить</Button>
           </div>
         </div>
-        {/* Нижний блок: оставшееся пространство (70%) */}
-        <div className="grow rounded-lg shadow-md ring-1 ring-gray-200/50 m-1" />{' '}
-        {/* или любой другой цвет */}
+        {/* Нижний блок: оставшееся пространство */}
+        <div className="flex-[70] min-h-0 rounded-lg shadow-md ring-1 ring-gray-200/50" />
       </div>
 
-      {/* Правый блок: занимает оставшиеся 75% ширины, вертикальный flex */}
-      <div className="flex flex-col w-3/4 h-full ">
-        {/* Верхний блок: растягивается на всё доступное место, оранжевый фон */}
-        <div className="flex flex-col grow rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 min-h-0">
+      {/* Правый блок: 75% ширины */}
+      {/* Правый блок */}
+      <div className="flex flex-col w-3/4 min-h-0 gap-1">
+        {/* Верхний блок: пропорция 55 */}
+        <div className="flex flex-col flex-55 min-h-0 rounded-lg shadow-md ring-1 ring-gray-200/50">
           <PhoneNumberPageNavbar />
           {scriptMode ? (
             <DocxViewer fileData={fileData} />
@@ -36,12 +36,13 @@ export const CallPhoneNumberPage: FC = () => {
             <ScriptBlockViewer blockKey={scriptBlockKey} />
           )}
           {scriptMode ? null : (
-            <div className="mt-auto">
+            <div className="mt-auto shrink-0">
               <ScriptSwitch />
             </div>
           )}
         </div>
-        <div className="flex flex-col min-h-[30%] rounded-lg shadow-md ring-1 ring-gray-200/50 m-1 overflow-hidden">
+        {/* Нижний блок: пропорция 45 */}
+        <div className="flex flex-col flex-45 min-h-0 rounded-lg shadow-md ring-1 ring-gray-200/50 overflow-hidden">
           <InputStatusBlock />
         </div>
       </div>

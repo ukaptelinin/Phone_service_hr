@@ -18,7 +18,7 @@ export const ScriptBlockViewer: React.FC<ScriptBlockViewerProps> = ({
   if (!htmlContent) {
     return (
       <div
-        className={`w-full h-full flex items-center justify-center text-default-400 ${className}`}
+        className={`w-full flex-1 min-h-0 flex items-center justify-center text-default-400 ${className}`}
       >
         <p>Блок "{blockKey}" не найден в загруженном документе</p>
       </div>
@@ -26,7 +26,7 @@ export const ScriptBlockViewer: React.FC<ScriptBlockViewerProps> = ({
   }
 
   return (
-    <div className={`w-full max-h-[63vh] overflow-y-auto p-4 ${className}`}>
+    <div className={`w-full flex-1 min-h-0 overflow-y-auto p-4 ${className}`}>
       <div
         className="max-w-none **:leading-relaxed"
         dangerouslySetInnerHTML={{ __html: htmlContent }}

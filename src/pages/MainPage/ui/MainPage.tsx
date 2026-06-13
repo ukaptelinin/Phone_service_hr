@@ -7,9 +7,9 @@ interface Props {
 
 export const MainPage: FC<Props> = ({ children }) => {
   return (
-    <div className="relative flex flex-col h-screen w-screen">
+    <div className="flex flex-col h-screen w-screen overflow-hidden">
       <Navbar />
-      <main className="h-full w-full">{children}</main>
+      <main className="flex-1 min-h-0 w-full">{children}</main>
       {/*<footer className="w-full flex items-center justify-center py-3 h-6">PHONE SERVICE</footer> */}
     </div>
   );

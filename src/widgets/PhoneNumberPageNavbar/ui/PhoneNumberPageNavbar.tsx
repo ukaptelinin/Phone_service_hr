@@ -7,7 +7,7 @@ export const PhoneNumberPageNavbar: FC = () => {
   const { scriptMode, toggleScriptMode } = useDocx();
 
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky" className="flex flex-row">
+    <HeroUINavbar maxWidth="xl" position="sticky" className="flex flex-row shrink-0">
       <NavbarContent className="flex justify-start gap-6">
         <NavbarItem>
           <Link className="px-4">Сценарий</Link>
