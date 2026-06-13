@@ -5,10 +5,10 @@ import type { FC } from 'react';
 import clsx from 'clsx';
 
 // Определяем соответствие
-type SectionKey = 'KPI' | 'О компании' | 'Не принимает' | 'Скрипт';
+type SectionKey = 'KPI:' | 'О компании' | 'Не принимает' | 'Скрипт';
 
 const data: Record<SectionKey, string> = {
-  KPI: 'KPI',
+  'KPI:': 'KPI:',
   'О компании': 'О компании:',
   'Не принимает': 'Что клиент не принимает:',
   Скрипт: 'Красным выделены обязательные вопросы и предложения!',
@@ -23,7 +23,7 @@ export const ScriptSwitch: FC = () => {
     selectScriptBlockKey(fullKey);
   };
 
-  const buttons: SectionKey[] = ['Скрипт', 'KPI', 'О компании', 'Не принимает'];
+  const buttons: SectionKey[] = ['Скрипт', 'KPI:', 'О компании', 'Не принимает'];
 
   return (
     <div className="flex flex-col gap-2">

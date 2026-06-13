@@ -5,7 +5,6 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
   /**
    * Извлекает все <style> блоки из HTML, сгенерированного docx-preview.
-   * Без них CSS-классы со стилями (цвет, шрифт, размер) не сработают.
    */
   const extractStyleBlocks = (source: string): string => {
     const matches = source.match(/<style[^>]*>[\s\S]*?<\/style>/gi);
@@ -17,7 +16,6 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
    * а также ко всем правилам color внутри <style> блоков.
    */
   const enforceColors = (block: string): string => {
-    // 1. Усиливаем inline style="...color..."
     let result = block.replace(/style="([^"]*)"/gi, (_fullMatch, styleContent: string) => {
       const enforced = styleContent.replace(
         /\b(color|background-color|background)\s*:\s*([^;!"]+)/gi,
@@ -30,7 +28,6 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
       return `style="${enforced}"`;
     });
 
-    // 2. Усиливаем color/background-color внутри <style> блоков
     result = result.replace(
       /(<style[^>]*>)([\s\S]*?)(<\/style>)/gi,
       (_full, openTag: string, css: string, closeTag: string) => {
@@ -68,7 +65,6 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
   /**
    * Находит начало ближайшего открывающего блочного тега перед offset.
-   * Расширен для docx-preview: добавлены div, section, span.
    */
   const findOpeningTagBefore = (source: string, offset: number): number => {
     const before = source.substring(0, offset);
@@ -85,6 +81,104 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
     return match ? offset + (match.index ?? 0) + match[0].length : offset;
   };
 
+  /**
+   * Строит карту: для каждого текстового символа (не внутри тега,
+   * не пробел/перенос) запоминает его и позицию в исходном HTML.
+   * Корректно декодирует HTML-сущности (&nbsp;, &amp; и т.д.).
+   */
+  const buildTextToHtmlMap = (source: string): { char: string; htmlIndex: number }[] => {
+    const map: { char: string; htmlIndex: number }[] = [];
+    let i = 0;
+    let inTag = false;
+
+    while (i < source.length) {
+      if (source[i] === '<') {
+        inTag = true;
+        i++;
+        continue;
+      }
+      if (source[i] === '>') {
+        inTag = false;
+        i++;
+        continue;
+      }
+
+      if (!inTag) {
+        // Проверяем HTML-сущность
+        const remaining = source.substring(i);
+        const entityMatch = remaining.match(/^&(?:#(\d+)|#x([0-9a-fA-F]+)|(\w+));/);
+
+        if (entityMatch) {
+          let decodedChar: string;
+
+          if (entityMatch[1]) {
+            // &#123;
+            decodedChar = String.fromCharCode(Number(entityMatch[1]));
+          } else if (entityMatch[2]) {
+            // &#xAB;
+            decodedChar = String.fromCharCode(parseInt(entityMatch[2], 16));
+          } else {
+            // &name;
+            const entityName = entityMatch[3];
+            const entities: Record<string, string> = {
+              nbsp: '\u00A0',
+              amp: '&',
+              lt: '<',
+              gt: '>',
+              quot: '"',
+              apos: "'",
+            };
+            decodedChar = entities[entityName] ?? entityMatch[0];
+          }
+
+          // Пропускаем пробельные символы (включая &nbsp; → \u00A0)
+          if (!/\s/.test(decodedChar) && decodedChar !== '\u00A0') {
+            map.push({ char: decodedChar, htmlIndex: i });
+          }
+
+          i += entityMatch[0].length;
+        } else {
+          const ch = source[i];
+          // Пропускаем пробелы, табы, переносы строк
+          if (!/\s/.test(ch)) {
+            map.push({ char: ch, htmlIndex: i });
+          }
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+
+    return map;
+  };
+
+  /**
+   * Ищет совпадение нормализованного ключа (без пробелов/переносов)
+   * в карте текстовых символов.
+   * Возвращает позиции начала и конца совпадения в исходном HTML.
+   */
+  const findByNormalizedText = (
+    textMap: { char: string; htmlIndex: number }[],
+    key: string,
+  ): { startHtmlIdx: number; endHtmlIdx: number } | null => {
+    // Нормализуем ключ: удаляем все пробельные символы
+    const normalizedKey = key.replace(/[\s\u00A0]/g, '');
+
+    if (normalizedKey.length === 0) return null;
+
+    // Собираем строку из символов карты для поиска подстроки
+    const textStr = textMap.map((item) => item.char).join('');
+    const matchIndex = textStr.indexOf(normalizedKey);
+
+    if (matchIndex === -1) return null;
+
+    return {
+      startHtmlIdx: textMap[matchIndex].htmlIndex,
+      endHtmlIdx: textMap[matchIndex + normalizedKey.length - 1].htmlIndex,
+    };
+  };
+
   // ── Извлекаем <style> блоки ──────────────────────────────────────────
   const styleBlocks = extractStyleBlocks(html);
 
@@ -92,26 +186,19 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
   const bodyHtml = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
   // ── Маркеры секций ───────────────────────────────────────────────────
-  const markers: { key: ScriptBlockKey; search: string }[] = [
-    {
-      key: 'KPI',
-      search: 'KPI:',
-    },
-    {
-      key: 'Что клиент не принимает:',
-      search: 'Что клиент не принимает:',
-    },
-    {
-      key: 'О компании:',
-      search: 'О компании:',
-    },
-    {
-      key: 'Красным выделены обязательные вопросы и предложения!',
-      search: 'Красным выделены',
-    },
+  // Поиск ведётся по key без пробелов/переносов — совпадает с текстом
+  // файла если последовательность символов (без пробелов) идентична.
+  const markers: { key: ScriptBlockKey }[] = [
+    { key: 'KPI:' },
+    { key: 'Что клиент не принимает:' },
+    { key: 'О компании:' },
+    { key: 'Красным выделены обязательные вопросы и предложения!' },
   ];
 
-  // ── Определяем позиции маркеров (ищем в bodyHtml без <style>) ───────
+  // ── Строим карту текстовых символов → позиций в HTML ─────────────────
+  const textMap = buildTextToHtmlMap(bodyHtml);
+
+  // ── Определяем позиции маркеров (порядок в файле произвольный) ───────
   const positions: {
     key: ScriptBlockKey;
     start: number;
@@ -119,15 +206,16 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
   }[] = [];
 
   for (const marker of markers) {
-    const textIdx = bodyHtml.indexOf(marker.search);
-    if (textIdx === -1) continue;
+    const match = findByNormalizedText(textMap, marker.key);
+    if (!match) continue;
 
-    const tagStart = findOpeningTagBefore(bodyHtml, textIdx);
-    const tagEnd = findClosingTagAfter(bodyHtml, textIdx);
+    const tagStart = findOpeningTagBefore(bodyHtml, match.startHtmlIdx);
+    const tagEnd = findClosingTagAfter(bodyHtml, match.endHtmlIdx);
 
     positions.push({ key: marker.key, start: tagStart, headerEnd: tagEnd });
   }
 
+  // Сортируем по фактическому расположению в документе
   positions.sort((a, b) => a.start - b.start);
 
   // ── Вырезаем HTML-блоки ──────────────────────────────────────────────
