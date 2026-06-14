@@ -19,11 +19,13 @@ export const PhoneNumberPageNavbar: FC = () => {
           <Link className="px-4">Задачи</Link>
         </NavbarItem>
       </NavbarContent>
-      <NavbarItem className="ml-auto">
-        <Button size="sm" onClick={toggleScriptMode}>
-          {scriptMode ? 'Новый' : 'Старый'}
-        </Button>
-      </NavbarItem>
+      <NavbarContent justify="end">
+        <NavbarItem className="pr-4">
+          <Button size="sm" onClick={toggleScriptMode}>
+            {scriptMode ? 'Новый' : 'Старый'}
+          </Button>
+        </NavbarItem>
+      </NavbarContent>
     </HeroUINavbar>
   );
 };

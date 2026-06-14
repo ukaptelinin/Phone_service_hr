@@ -9,12 +9,12 @@ interface DocxViewerProps {
 }
 
 const defaultOptions: Options = {
-  className: 'docx-wrapper',
-  inWrapper: true,
-  ignoreWidth: false,
-  ignoreHeight: false,
+  className: 'docx-viewer-content',
+  inWrapper: false, // ← НЕ создаём обёртку с серым фоном
+  ignoreWidth: true, // ← секция растягивается по ширине контейнера
+  ignoreHeight: true, // ← убираем фиксированную высоту страницы
   ignoreFonts: false,
-  breakPages: true,
+  breakPages: false, // ← сплошной поток без разрывов страниц
   ignoreLastRenderedPageBreak: true,
   renderHeaders: true,
   renderFooters: true,
@@ -30,21 +30,35 @@ const defaultOptions: Options = {
   renderAltChunks: false,
 };
 
-// ─── пустой объект-константа, чтобы дефолт не создавался заново ───
 const EMPTY_OPTIONS: Partial<Options> = {};
+
+/**
+ * После рендера — полностью убираем инлайн-стили со всех секций,
+ * оставляя только контент.
+ */
+function cleanupDocxStyles(container: HTMLElement) {
+  // Если всё же появился wrapper (на случай если inWrapper вернётся)
+  const wrapper = container.querySelector<HTMLElement>('.docx-wrapper, .docx-viewer-content');
+  if (wrapper) {
+    wrapper.removeAttribute('style');
+  }
+
+  // Убираем ВСЕ инлайн-стили с секций
+  const sections = container.querySelectorAll<HTMLElement>('section.docx');
+  sections.forEach((section) => {
+    section.removeAttribute('style');
+  });
+}
 
 export const DocxViewer: React.FC<DocxViewerProps> = ({
   fileData,
   className = '',
-  // ▸ FIX 1: дефолт — стабильная константа, а не литерал {}
   options = EMPTY_OPTIONS,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ▸ FIX 2: стабилизируем ссылку на options через JSON-сериализацию.
-  //   useMemo пересчитается только если СОДЕРЖИМОЕ options реально изменилось.
   const stableOptionsKey = JSON.stringify(options);
   const mergedOptions = useMemo<Options>(
     () => ({ ...defaultOptions, ...options }),
@@ -52,22 +66,18 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({
     [stableOptionsKey],
   );
 
-  // ▸ FIX 3: храним предыдущий fileData, чтобы не перерисовывать тот же файл
   const prevFileDataRef = useRef<ArrayBuffer | Blob | null>(null);
   const prevOptionsKeyRef = useRef<string>('');
 
   useEffect(() => {
     if (!fileData || !containerRef.current) return;
 
-    // ── Если fileData и options не изменились — ничего не делаем ──
     if (prevFileDataRef.current === fileData && prevOptionsKeyRef.current === stableOptionsKey) {
       return;
     }
     prevFileDataRef.current = fileData;
     prevOptionsKeyRef.current = stableOptionsKey;
 
-    // ▸ FIX 4: используем флаг отмены, чтобы устаревший рендер
-    //   не перезаписывал результат нового
     let cancelled = false;
 
     const render = async () => {
@@ -75,15 +85,15 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({
       setError(null);
 
       try {
-        // ▸ FIX 5: очищаем контейнер только ПЕРЕД новым рендером,
-        //   а не при каждом useEffect-вызове
         const container = containerRef.current!;
         container.innerHTML = '';
 
         await renderAsync(fileData, container, undefined, mergedOptions);
 
-        // Если за время рендера пришёл новый вызов — игнорируем результат
         if (cancelled) return;
+
+        // Убираем все инлайн-стили, созданные библиотекой
+        cleanupDocxStyles(container);
       } catch (err) {
         if (cancelled) return;
         console.error('DOCX render error:', err);
@@ -95,7 +105,6 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({
 
     render();
 
-    // cleanup: помечаем предыдущий рендер как отменённый
     return () => {
       cancelled = true;
     };
@@ -110,23 +119,13 @@ export const DocxViewer: React.FC<DocxViewerProps> = ({
   }
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`${styles.wrapper} ${className}`}>
       {isLoading && (
         <div className={styles.loader}>
           <div className={styles.spinner} />
         </div>
       )}
-      <div
-        ref={containerRef}
-        className={styles.container}
-        style={{
-          width: '100%',
-          flex: '1 1 0%', // или просто flex: '1'
-          minHeight: '0',
-          overflowY: 'auto',
-          padding: '1rem',
-        }}
-      />
+      <div ref={containerRef} className={styles.container} />
     </div>
   );
 };
