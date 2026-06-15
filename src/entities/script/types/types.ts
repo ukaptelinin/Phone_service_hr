@@ -6,8 +6,4 @@ export interface DocxData {
   scriptBlocks: ScriptBlocks;
 }
 
-export type ScriptBlockKey =
-  | 'KPI:'
-  | 'Что клиент не принимает:'
-  | 'О компании:'
-  | 'Красным выделены обязательные вопросы и предложения!';
+export type ScriptBlockKey = 'KPI:' | 'Что клиент не принимает:' | 'О компании:' | 'Указать:';

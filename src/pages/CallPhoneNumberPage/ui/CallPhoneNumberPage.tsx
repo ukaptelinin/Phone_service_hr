@@ -14,14 +14,14 @@ export const CallPhoneNumberPage: FC = () => {
       {/* Левый блок: 25% ширины */}
       <div className="flex flex-col w-1/4 min-h-0 gap-1">
         {/* Верхний блок: 30% высоты левой колонки */}
-        <div className="flex-[30] shrink-0 rounded-lg shadow-md ring-1 ring-gray-200/50">
+        <div className="flex-30 shrink-0 rounded-lg shadow-md ring-1 ring-gray-200/50">
           <div className="flex flex-col items-center max-w-xl gap-4">
             <h1>+79291235467</h1>
             <Button className="bg-green-500">Позвонить</Button>
           </div>
         </div>
         {/* Нижний блок: оставшееся пространство */}
-        <div className="flex-[70] min-h-0 rounded-lg shadow-md ring-1 ring-gray-200/50" />
+        <div className="flex-70 min-h-0 rounded-lg shadow-md ring-1 ring-gray-200/50" />
       </div>
 
       {/* Правый блок: 75% ширины */}

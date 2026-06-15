@@ -47,6 +47,69 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
   };
 
   /**
+   * Применяет стили таблицы для секции скрипта:
+   * - Вставляет CSS с border, padding, width для table/td/th
+   * - Добавляет !important к display-свойствам табличных элементов inline
+   * - Гарантирует корректное отображение таблицы в любом контексте
+   */
+  const enforceTableStyles = (block: string): string => {
+    const tableCss = `<style>
+      .script-table-section table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+        display: table !important;
+      }
+      .script-table-section thead {
+        display: table-header-group !important;
+      }
+      .script-table-section tbody {
+        display: table-row-group !important;
+      }
+      .script-table-section tr {
+        display: table-row !important;
+      }
+      .script-table-section td,
+      .script-table-section th {
+        border: 1px solid #000 !important;
+        padding: 6px 8px !important;
+        vertical-align: top !important;
+        display: table-cell !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+      }
+      .script-table-section th {
+        font-weight: bold !important;
+        text-align: center !important;
+      }
+      .script-table-section col {
+        display: table-column !important;
+      }
+      .script-table-section colgroup {
+        display: table-column-group !important;
+      }
+    </style>`;
+
+    // Оборачиваем содержимое в div с классом для скоупинга CSS
+    const wrapped = `${tableCss}\n<div class="script-table-section">${block}</div>`;
+
+    // Добавляем !important к inline-стилям связанных с размерами и отображением таблицы
+    const result = wrapped.replace(/style="([^"]*)"/gi, (_fullMatch, styleContent: string) => {
+      const enforced = styleContent.replace(
+        /\b(width|min-width|max-width|border|border-collapse|padding|vertical-align|display)\s*:\s*([^;!"]+)/gi,
+        (__, prop: string, value: string) => {
+          const trimmed = value.trim();
+          if (trimmed.endsWith('!important')) return `${prop}: ${trimmed}`;
+          return `${prop}: ${trimmed} !important`;
+        },
+      );
+      return `style="${enforced}"`;
+    });
+
+    return result;
+  };
+
+  /**
    * Вставляет переносы строк между блочными тегами.
    */
   const insertSpaceBetweenLines = (block: string): string =>
@@ -61,6 +124,28 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
       .replace(/(<\/tr>)\s*(<tr\b)/gi, '$1\n$2')
       .replace(/(<table[^>]*>)\s*(<tr\b)/gi, '$1\n$2')
       .replace(/(<\/tr>)\s*(<\/table>)/gi, '$1\n$2')
+      .trim();
+
+  /**
+   * Вставляет переносы строк между блочными тегами,
+   * НО не трогает внутреннюю структуру таблиц (tr, td, th).
+   * Используется для секции с таблицей, чтобы не ломать её разметку.
+   */
+  const insertSpaceBetweenLinesPreserveTable = (block: string): string =>
+    block
+      .replace(
+        /(<\/(?:p|h[1-6]|li|ol|ul|div|section|blockquote)>)\s*(<(?:p|h[1-6]|li|ol|ul|div|section|blockquote)\b)/gi,
+        '$1\n\n$2',
+      )
+      .replace(/(<\/li>)\s*(<li\b)/gi, '$1\n$2')
+      .replace(/(<(?:ol|ul)[^>]*>)\s*(<li\b)/gi, '$1\n$2')
+      .replace(/(<\/li>)\s*(<\/(?:ol|ul)>)/gi, '$1\n$2')
+      // Между table и окружающими блоками — переносы
+      .replace(
+        /(<\/table>)\s*(<(?:p|h[1-6]|li|ol|ul|div|section|blockquote|table)\b)/gi,
+        '$1\n\n$2',
+      )
+      .replace(/(<\/(?:p|h[1-6]|li|ol|ul|div|section|blockquote)>)\s*(<table\b)/gi, '$1\n\n$2')
       .trim();
 
   /**
@@ -179,6 +264,9 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
     };
   };
 
+  // ── Ключ секции с таблицей ───────────────────────────────────────────
+  const TABLE_SECTION_KEY: ScriptBlockKey = 'Указать:';
+
   // ── Извлекаем <style> блоки ──────────────────────────────────────────
   const styleBlocks = extractStyleBlocks(html);
 
@@ -186,13 +274,11 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
   const bodyHtml = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
   // ── Маркеры секций ───────────────────────────────────────────────────
-  // Поиск ведётся по key без пробелов/переносов — совпадает с текстом
-  // файла если последовательность символов (без пробелов) идентична.
   const markers: { key: ScriptBlockKey }[] = [
     { key: 'KPI:' },
     { key: 'Что клиент не принимает:' },
     { key: 'О компании:' },
-    { key: 'Красным выделены обязательные вопросы и предложения!' },
+    { key: TABLE_SECTION_KEY },
   ];
 
   // ── Строим карту текстовых символов → позиций в HTML ─────────────────
@@ -227,11 +313,20 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
     let blockHtml = bodyHtml.substring(contentStart, contentEnd).trim();
 
-    // 1. Форматируем переносы
-    blockHtml = insertSpaceBetweenLines(blockHtml);
+    const isTableSection = positions[i].key === TABLE_SECTION_KEY;
+
+    // 1. Форматируем переносы (для секции таблицы — без разбиения внутри table)
+    blockHtml = isTableSection
+      ? insertSpaceBetweenLinesPreserveTable(blockHtml)
+      : insertSpaceBetweenLines(blockHtml);
 
     // 2. Подкладываем <style> блоки + усиливаем цвета через !important
     blockHtml = enforceColors(styleBlocks + '\n' + blockHtml);
+
+    // 3. Для секции с таблицей — дополнительно применяем табличные стили
+    if (isTableSection) {
+      blockHtml = enforceTableStyles(blockHtml);
+    }
 
     blocks[positions[i].key] = blockHtml;
   }

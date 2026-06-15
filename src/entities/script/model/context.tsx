@@ -27,9 +27,7 @@ export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [scriptMode, setScriptMode] = useState(false);
   const [fileName, setFileName] = useState('');
   const [scriptBlocks, setScriptBlocks] = useState<ScriptBlocks>({});
-  const [scriptBlockKey, setScriptBlockKey] = useState<ScriptBlockKey>(
-    'Красным выделены обязательные вопросы и предложения!',
-  );
+  const [scriptBlockKey, setScriptBlockKey] = useState<ScriptBlockKey>('Указать:');
 
   const setDocxData = (html: string, name: string) => {
     setHtmlContent(html);
