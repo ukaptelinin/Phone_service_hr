@@ -8,7 +8,7 @@ interface StatusBlockItemsProps {
 export const InputStatusBlockItem: FC<StatusBlockItemsProps> = ({ title, color, value }) => {
   return (
     <Radio value={value}>
-      <Radio.Control className={`border-2 ${color} shrink-0`}>
+      <Radio.Control className={`border-2 ${color} shrink-0 `}>
         <Radio.Indicator />
       </Radio.Control>
       <Radio.Content className="flex-1">

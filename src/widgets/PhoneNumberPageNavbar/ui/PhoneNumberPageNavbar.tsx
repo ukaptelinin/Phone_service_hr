@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { Navbar as HeroUINavbar, NavbarContent, NavbarItem } from '@heroui/navbar';
-import { Button, Link } from '@heroui/react';
+import { Button, Link, Tooltip } from '@heroui/react';
 import { useDocx } from '@/entities/script/model/useDocx';
 
 export const PhoneNumberPageNavbar: FC = () => {
@@ -20,10 +20,16 @@ export const PhoneNumberPageNavbar: FC = () => {
         </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem className="pr-4">
-          <Button size="sm" onClick={toggleScriptMode}>
-            {scriptMode ? 'Новый' : 'Старый'}
-          </Button>
+        <NavbarItem className="pr-4 py-1">
+          <Tooltip delay={0}>
+            <Button size="sm" onClick={toggleScriptMode}>
+              {scriptMode ? 'Новый стиль' : 'Старый стиль'}
+            </Button>
+            <Tooltip.Content showArrow placement="left">
+              <Tooltip.Arrow />
+              <p>Способ отображения скрипта</p>
+            </Tooltip.Content>
+          </Tooltip>
         </NavbarItem>
       </NavbarContent>
     </HeroUINavbar>

@@ -22,8 +22,11 @@ export const InputStatusBlock: FC = () => {
       {/* Нижний блок: 35% высоты */}
       <div className="h-[35%] min-h-0 rounded-b-lg flex flex-row items-stretch gap-2 p-2">
         <div className="grow min-h-0">
-          <TextField name="comment" className="w-full h-full">
-            <TextArea placeholder="Введите комментарий" className="w-full h-full resize-none" />
+          <TextField name="comment" className="w-full h-full py-1">
+            <TextArea
+              placeholder="Введите комментарий"
+              className="w-full h-full resize-none bg-stone-200 "
+            />
           </TextField>
         </div>
         <Button type="submit" className="self-center bg-green-500">
