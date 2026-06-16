@@ -48,7 +48,9 @@ export const DocxProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setScriptBlocks({});
   };
 
-  const selectScriptBlockKey = (blockKey: ScriptBlockKey) => setScriptBlockKey(blockKey);
+  const selectScriptBlockKey = (blockKey: ScriptBlockKey) => {
+    setScriptBlockKey(blockKey);
+  };
 
   return (
     <DocxContext.Provider

@@ -277,6 +277,8 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
   const markers: { key: ScriptBlockKey }[] = [
     { key: 'KPI:' },
     { key: 'Что клиент не принимает:' },
+    { key: 'Что не принимается:' },
+    { key: 'ЧТО НЕ ПРИНИМАЕТСЯ:' },
     { key: 'О компании:' },
     { key: TABLE_SECTION_KEY },
   ];
@@ -297,8 +299,12 @@ export const parseHtmlToBlocks = (html: string): ScriptBlocks => {
 
     const tagStart = findOpeningTagBefore(bodyHtml, match.startHtmlIdx);
     const tagEnd = findClosingTagAfter(bodyHtml, match.endHtmlIdx);
-
-    positions.push({ key: marker.key, start: tagStart, headerEnd: tagEnd });
+    const markerKey: ScriptBlockKey =
+      marker.key === 'Что не принимается:' || marker.key === 'ЧТО НЕ ПРИНИМАЕТСЯ:'
+        ? 'Что клиент не принимает:'
+        : marker.key;
+    // ЗДЕСЬ ПОСТАВИТЬ УСЛОВИЕ!!!!!!!!!!!!!
+    positions.push({ key: markerKey, start: tagStart, headerEnd: tagEnd });
   }
 
   // Сортируем по фактическому расположению в документе
